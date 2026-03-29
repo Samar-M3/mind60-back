@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.core.security import get_current_user
 from backend.models import PostCreate, PostResponse
 from backend.services.ai_service import analyze_distress
+from backend.services.content_filter import mask_profanity
 from backend.services.firestore_service import ensure_user_profile
 from backend.core.firebase import get_db
 
@@ -17,6 +18,8 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 async def create_post(body: PostCreate, current_user=Depends(get_current_user)):
     if not body.content.strip():
         raise HTTPException(status_code=400, detail="Content cannot be empty")
+
+    clean_content = mask_profanity(body.content)
 
     db = get_db()
     profile = ensure_user_profile(
@@ -31,7 +34,7 @@ async def create_post(body: PostCreate, current_user=Depends(get_current_user)):
 
     post_record = {
         "id": post_id,
-        "content": body.content,
+        "content": clean_content,
         "userId": current_user["uid"],
         "userRole": profile.get("role", "user"),
         "alias": profile.get("alias"),
@@ -62,6 +65,9 @@ async def list_posts(limit: int = 20, current_user=Depends(get_current_user)):
     for doc in docs:
         data = doc.to_dict()
 
+        # Double-sanitize in case legacy posts were stored before masking
+        data["content"] = mask_profanity(data.get("content", ""))
+
         # Check user's reaction, if any
         reaction = (
             db.collection("reactions")
@@ -79,6 +85,28 @@ async def list_posts(limit: int = 20, current_user=Depends(get_current_user)):
     return posts
 
 
+@router.get("/me", response_model=List[PostResponse])
+async def list_my_posts(limit: int = 50, current_user=Depends(get_current_user)):
+    """
+    Return the authenticated user's posts (newest first).
+    """
+    db = get_db()
+    docs = (
+        db.collection("posts")
+        .where("userId", "==", current_user["uid"])
+        .order_by("createdAt", direction="DESCENDING")
+        .limit(limit)
+        .stream()
+    )
+
+    posts: List[PostResponse] = []
+    for doc in docs:
+        data = doc.to_dict()
+        data["content"] = mask_profanity(data.get("content", ""))
+        posts.append(PostResponse(**data, userReaction=None))
+    return posts
+
+
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(post_id: str, current_user=Depends(get_current_user)):
     db = get_db()
@@ -87,6 +115,7 @@ async def get_post(post_id: str, current_user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Post not found")
 
     data = snap.to_dict()
+    data["content"] = mask_profanity(data.get("content", ""))
 
     user_reaction = None
     reaction = (

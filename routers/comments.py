@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend.core.security import get_current_user, assert_professional_role
 from backend.models import CommentCreate, CommentResponse
+from backend.services.content_filter import mask_profanity
 from backend.core.firebase import get_db
 
 router = APIRouter(prefix="/posts", tags=["comments"])
@@ -28,12 +29,14 @@ async def add_comment(
     user_role = user_doc.to_dict().get("role", "user")
     assert_professional_role(user_role)
 
+    clean_content = mask_profanity(body.content)
+
     comment_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
     comment_record = {
         "id": comment_id,
         "postId": post_id,
-        "content": body.content,
+        "content": clean_content,
         "authorId": current_user["uid"],
         "authorRole": user_role,
         "createdAt": created_at,
@@ -64,7 +67,9 @@ async def list_comments(post_id: str, current_user=Depends(get_current_user)):
         .order_by("createdAt")
         .stream()
     ):
-        comments.append(CommentResponse(**doc.to_dict()))
+        data = doc.to_dict()
+        data["content"] = mask_profanity(data.get("content", ""))
+        comments.append(CommentResponse(**data))
 
     return comments
 

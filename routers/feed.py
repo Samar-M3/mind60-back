@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from backend.core.security import get_current_user
 from backend.models import PostResponse
 from backend.services.feed_algorithm import rank_posts
+from backend.services.content_filter import mask_profanity
 from backend.core.firebase import get_db
 
 router = APIRouter(prefix="/feed", tags=["feed"])
@@ -22,7 +23,9 @@ async def get_ranked_feed(limit: int = 20, current_user=Depends(get_current_user
         .limit(limit)
         .stream()
     ):
-        posts.append(doc.to_dict())
+        data = doc.to_dict()
+        data["content"] = mask_profanity(data.get("content", ""))
+        posts.append(data)
 
     # Minimal personalization stub
     user_context = {
