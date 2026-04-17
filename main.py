@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from .core.config import settings
 from .core.firebase import init_firebase
 from .middleware.rate_limiter import RateLimiterMiddleware
-from .routers import auth, posts, reactions, comments, feed, chat, users, games
+from .routers import auth, posts, reactions, comments, feed, chat, users, games, wellness
 
 load_dotenv()
 init_firebase()
@@ -43,6 +43,7 @@ app.include_router(feed.router, prefix=API_PREFIX)
 app.include_router(chat.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(games.router, prefix=API_PREFIX)
+app.include_router(wellness.router, prefix=API_PREFIX)
 
 
 @app.get("/")

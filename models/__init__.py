@@ -14,6 +14,7 @@ from backend.models.game import (
     GameScoreResponse,
     GameLeaderboardResponse,
 )
+from backend.models.wellness import WellnessAnalyzeRequest, WellnessAnalyzeResponse
 
 __all__ = [
     "PostCreate",
@@ -34,5 +35,7 @@ __all__ = [
     "GameLeaderboardEntry",
     "GameScoreResponse",
     "GameLeaderboardResponse",
+    "WellnessAnalyzeRequest",
+    "WellnessAnalyzeResponse",
 ]
 

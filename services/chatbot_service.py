@@ -9,7 +9,7 @@ try:
     import anthropic  # type: ignore
 except Exception:
     anthropic = None
-
+##this is a comment
 SYSTEM_PROMPT = """
 You are Sathi 🌿, a compassionate, CBT-informed mental health companion.
 - You listen with warmth, validate feelings, and keep responses concise.
@@ -38,13 +38,26 @@ def _crisis_response() -> str:
     )
 
 
-async def get_chatbot_response(message: str, history: Optional[List[dict]] = None) -> str:
+async def get_chatbot_response(
+    message: str,
+    history: Optional[List[dict]] = None,
+    wellness_context: Optional[str] = None,
+) -> str:
     msg = message.lower()
     if any(word in msg for word in CRISIS_KEYWORDS):
         return _crisis_response()
 
     # Anthropic if available and key set
     api_key = os.getenv("ANTHROPIC_API_KEY")
+    system = SYSTEM_PROMPT
+    if wellness_context:
+        system = (
+            SYSTEM_PROMPT
+            + "\n- The user shared optional wellness context (usage/mood estimates). "
+            "Acknowledge gently if relevant; never shame. Context:\n"
+            + wellness_context.strip()
+        )
+
     if api_key and anthropic is not None:
         try:
             client = anthropic.Anthropic(api_key=api_key)
@@ -56,7 +69,7 @@ async def get_chatbot_response(message: str, history: Optional[List[dict]] = Non
             completion = client.messages.create(
                 model="claude-3-sonnet-20240229",
                 max_tokens=250,
-                system=SYSTEM_PROMPT,
+                system=system,
                 messages=conv,
             )
             # Anthropic SDK returns content list; take text part

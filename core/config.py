@@ -5,6 +5,7 @@ can rely on typed, validated values.
 """
 
 from typing import List, Optional
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     firebase_credentials_path: Optional[str] = None
 
     # CORS
-    allowed_origins: List[str] = [
+    allowed_origins: List[str] | str = [
         "http://localhost:5173",
         "http://localhost:3000",
     ]
@@ -25,13 +26,20 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
 
     # Admin access
-    admin_uids: List[str] = []
+    admin_uids: List[str] | str = []
 
     # Misc
     environment: str = "development"
     frontend_url: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+
+    @field_validator("allowed_origins", "admin_uids", mode="before")
+    @classmethod
+    def _split_comma_separated_strings(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
 
 
 settings = Settings()

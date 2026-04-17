@@ -1,4 +1,4 @@
-from backend.routers import auth, posts, reactions, comments, feed, chat, users, games
+from backend.routers import auth, posts, reactions, comments, feed, chat, users, games, wellness
 
-__all__ = ["auth", "posts", "reactions", "comments", "feed", "chat", "users", "games"]
+__all__ = ["auth", "posts", "reactions", "comments", "feed", "chat", "users", "games", "wellness"]
 

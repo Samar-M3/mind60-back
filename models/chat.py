@@ -10,6 +10,11 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
     history: Optional[List[ChatMessage]] = Field(default_factory=list)
+    wellness_context: Optional[str] = Field(
+        default=None,
+        max_length=1600,
+        description="Optional short summary of tracked mood/usage for personalization",
+    )
 
 
 class ChatResponse(BaseModel):

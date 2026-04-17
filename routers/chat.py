@@ -13,5 +13,9 @@ async def chat(body: ChatRequest, current_user=Depends(get_current_user)):
     Chat with Sathi. Uses Anthropic if ANTHROPIC_API_KEY is set, otherwise a safe mock.
     Crisis phrases trigger a crisis-safe response.
     """
-    reply = await get_chatbot_response(body.message, history=body.history)
+    reply = await get_chatbot_response(
+        body.message,
+        history=body.history,
+        wellness_context=body.wellness_context,
+    )
     return ChatResponse(reply=reply)
