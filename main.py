@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from .core.config import settings
-from .core.firebase import init_firebase
-from .middleware.rate_limiter import RateLimiterMiddleware
-from .routers import auth, posts, reactions, comments, feed, chat, users, games, wellness
+from core.config import settings
+from core.firebase import init_firebase
+from middleware.rate_limiter import RateLimiterMiddleware
+from routers import auth, posts, reactions, comments, feed, chat, users, games, wellness
 
 load_dotenv()
 init_firebase()
