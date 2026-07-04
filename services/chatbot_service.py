@@ -42,6 +42,7 @@ async def get_chatbot_response(
     message: str,
     history: Optional[List[dict]] = None,
     wellness_context: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> str:
     msg = message.lower()
     if any(word in msg for word in CRISIS_KEYWORDS):
@@ -52,11 +53,23 @@ async def get_chatbot_response(
     system = SYSTEM_PROMPT
     if wellness_context:
         system = (
-            SYSTEM_PROMPT
+            system
             + "\n- The user shared optional wellness context (usage/mood estimates). "
             "Acknowledge gently if relevant; never shame. Context:\n"
             + wellness_context.strip()
         )
+        
+    if user_id:
+        from backend.cognee.memory_reader import get_user_context
+        memory_context = await get_user_context(user_id)
+        if memory_context:
+            system = (
+                system
+                + "\n- You have background memory of this user from past sessions. "
+                "Use this as soft context only; do not state raw memory text directly, never act like you're surveilling, "
+                "and NEVER state a diagnostic label unless the user has used it themselves. Context:\n"
+                + memory_context.strip()
+            )
 
     if api_key and anthropic is not None:
         try:

@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from pathlib import Path
 
-from core.config import settings
-from core.firebase import init_firebase
-from middleware.rate_limiter import RateLimiterMiddleware
-from routers import auth, posts, reactions, comments, feed, chat, users, games, wellness
+from backend.core.config import settings
+from backend.core.firebase import init_firebase
+from backend.middleware.rate_limiter import RateLimiterMiddleware
+from backend.routers import auth, posts, reactions, comments, feed, chat, users, games, wellness, memory
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 init_firebase()
 
 API_PREFIX = "/api"
@@ -44,6 +45,7 @@ app.include_router(chat.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(games.router, prefix=API_PREFIX)
 app.include_router(wellness.router, prefix=API_PREFIX)
+app.include_router(memory.router, prefix=API_PREFIX)
 
 
 @app.get("/")

@@ -5,9 +5,11 @@ can rely on typed, validated values.
 """
 
 from typing import List, Optional
+from pathlib import Path
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 class Settings(BaseSettings):
     """Runtime configuration loaded from environment variables and .env file."""
@@ -31,8 +33,10 @@ class Settings(BaseSettings):
     # Misc
     environment: str = "development"
     frontend_url: Optional[str] = None
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+    model_config = SettingsConfigDict(env_file=str(_ENV_PATH), case_sensitive=False)
 
     @field_validator("allowed_origins", "admin_uids", mode="before")
     @classmethod
